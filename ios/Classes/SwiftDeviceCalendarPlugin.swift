@@ -170,17 +170,16 @@ public class SwiftDeviceCalendarPlugin: NSObject, FlutterPlugin {
                 calendar.cgColor = UIColor(red: 255, green: 0, blue: 0, alpha: 0).cgColor // Red colour as a default
             }
             
-            let localSources = eventStore.sources.filter { $0.sourceType == .local || ($0.sourceType == .calDAV && $0.title == "iCloud") }
+	    guard let defaultSource = eventStore.defaultCalendarForNewEvents?.source else {
+                result(FlutterError(code: self.genericError, message: "Default calendar was not found.", details: nil))
+                return
+            }
+
+            calendar.source = defaultSource;
+            //let localSources = eventStore.sources.filter { $0.sourceType == .local || ($0.sourceType == .calDAV && $0.title == "iCloud") }
             
-            if (!localSources.isEmpty) {
-                calendar.source = localSources.first
-                
-                try eventStore.saveCalendar(calendar, commit: true)
-                result(calendar.calendarIdentifier)
-            }
-            else {
-                result(FlutterError(code: self.genericError, message: "Local calendar was not found.", details: nil))
-            }
+            try eventStore.saveCalendar(calendar, commit: true)
+            result(calendar.calendarIdentifier)
         }
         catch {
             eventStore.reset()
